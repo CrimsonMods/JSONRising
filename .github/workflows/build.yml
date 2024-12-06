@@ -42,8 +42,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          releaseId: ${{ env.GitVersion_SemVer }}
+          PACKAGE_VERSION: ${{ env.GitVersion_SemVer }}
 
       - name: GH Release
         uses: softprops/action-gh-release@v1
@@ -52,7 +51,7 @@ jobs:
           body: Automatic pre-release of ${{ env.GitVersion_SemVer }} for ${{ env.GitVersion_ShortSha }}
           name: v${{ env.GitVersion_SemVer }}
           files: |
-              ./src-tauri/target/release/*.msi
+              ./src-tauri/target/release/bundle/nsis/*.exe
               CHANGELOG.md
           fail_on_unmatched_files: true
           prerelease: true
