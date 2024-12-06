@@ -1,0 +1,32 @@
+﻿@page "/"
+@using JSONRising.Models;
+@inject NavigationManager NavigationManager
+
+<h1>JSONRising</h1>
+
+<div class="mod-selection">
+    @foreach (var mod in Mods)
+    {
+        <div class="mod-card" @onclick="() => SelectMod(mod)">
+            <h3>@mod.Name</h3>
+            <p>@mod.Description</p>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ModDefinition> Mods = new()
+    {
+        new ModDefinition 
+        { 
+            Id = "chatfilter",
+            Name = "CrimsonChatFilter", 
+            Description = "Configure filtered words for chat moderation"
+        }
+    };
+
+    private void SelectMod(ModDefinition mod)
+    {
+        NavigationManager.NavigateTo($"/{mod.Id}");
+    }
+}

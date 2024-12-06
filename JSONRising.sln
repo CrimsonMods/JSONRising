@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JSONRising", "src\JSONRising.csproj", "{BD4D160D-E745-4DFF-9E64-3C3B0673D62F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD4D160D-E745-4DFF-9E64-3C3B0673D62F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD4D160D-E745-4DFF-9E64-3C3B0673D62F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD4D160D-E745-4DFF-9E64-3C3B0673D62F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD4D160D-E745-4DFF-9E64-3C3B0673D62F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {47817579-D3E2-4438-B6E2-7020B0E4B4A3}
+	EndGlobalSection
+EndGlobal

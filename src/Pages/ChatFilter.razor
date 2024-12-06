@@ -1,0 +1,93 @@
+@page "/chatfilter"
+@using JSONRising.Components
+@using JSONRising.Models
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="nav-buttons">
+    <button @onclick="SaveConfig">Save JSON</button>
+    <button @onclick="LoadConfig">Load JSON</button>
+    <button @onclick="Back">Back</button>
+</div>
+
+<h3>CrimsonChatFilter: filtered_words.json</h3>
+
+<ChatFilterEditor @bind-FilteredWords="config.FilteredWords" />
+
+@code {
+    private ChatFilterConfig config = new();
+
+    private async Task SaveConfig()
+    {
+        try
+        {
+            // 1. Show save dialog
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.save", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                // 2. Serialize config
+                var json = JsonSerializer.Serialize(config.FilteredWords, new JsonSerializerOptions  { WriteIndented = true });;
+
+                // 3. Save file using Tauri command
+                await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke",
+                "save_filter_config",
+                new FileRequest
+                    {
+                        Path = path,
+                        Content = json
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            // Handle error appropriately
+        }
+    }
+
+    private async Task LoadConfig()
+    {
+        try
+        {
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.open", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                var json = await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_filter_config", new FileRequest
+                    {
+                        Path = path
+                    });
+                config.FilteredWords = JsonSerializer.Deserialize<List<string>>(json) ?? new();
+                foreach (var word in config.FilteredWords)
+                {
+                    Console.WriteLine(word);
+                }
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine(ex);
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private class FileRequest
+    {
+        public string? Path { get; set; }
+        public string? Content { get; set; }
+    }
+}

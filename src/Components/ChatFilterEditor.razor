@@ -1,0 +1,98 @@
+@using System.Text.RegularExpressions
+
+<div class="chat-filter-editor">
+    <div class="left-column">
+        <div class="add-word-section mb-4">
+            <input type="text" @bind="newWord" placeholder="Enter word to filter" class="mb-2" />
+            <button @onclick="AddWord">Add Word</button>
+        </div>
+
+        <div class="word-list gap-2">
+            @foreach (var word in FilteredWords)
+            {
+                <div class="word-item mb-2">
+                    <span>@word</span>
+                    <button @onclick="() => RemoveWord(word)">Remove</button>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="right-column flex-grow-1">
+        <div class="tester-input mb-4">
+            <textarea @bind="testText" @bind:event="oninput" 
+                     placeholder="Type text to test..." 
+                     class="w-100" 
+                     rows="5">
+            </textarea>
+        </div>
+        <div class="tester-result mb-4">
+            @if (!string.IsNullOrEmpty(testText))
+            {
+                @((MarkupString)HighlightFilteredWords(testText))
+            }
+        </div>
+        <div class="help-section">
+            <h5>Filter Syntax Guide:</h5>
+            <ul>
+                <li><span style="color: red">Literal matches</span> - Type exact word (e.g., "shit")</li>
+                <li><span style="color: green">Wildcard matches</span> - Use * for any characters (e.g., "shit*" matches "shit", "shitface", etc.)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string newWord = "";
+    private string testText = "";
+
+    [Parameter]
+    public List<string> FilteredWords { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<List<string>> FilteredWordsChanged { get; set; }
+
+    private async Task AddWord()
+    {
+        if (!string.IsNullOrWhiteSpace(newWord) && !FilteredWords.Contains(newWord))
+        {
+            FilteredWords.Add(newWord);
+            await FilteredWordsChanged.InvokeAsync(FilteredWords);
+            newWord = "";
+        }
+    }
+
+    private async Task RemoveWord(string word)
+    {
+        FilteredWords.Remove(word);
+        await FilteredWordsChanged.InvokeAsync(FilteredWords);
+    }
+    private string HighlightFilteredWords(string input)
+    {
+        string result = input;
+        foreach (var word in FilteredWords)
+        {
+            if (string.IsNullOrEmpty(word)) continue;
+
+            var pattern = CreateRegexPattern(word);
+            if (word.Contains("*"))
+            {
+                // Wildcard matches in blue
+                result = Regex.Replace(result, pattern, match =>
+                $"<span style='color: green'>{match.Value}</span>");
+            }
+            else
+            {
+                // Literal matches in red
+                result = Regex.Replace(result, pattern, match =>
+                $"<span style='color: red'>{match.Value}</span>");
+            }
+        }
+        return result;
+    }
+
+    private static string CreateRegexPattern(string word)
+    {
+        string escapedWord = Regex.Escape(word).Replace(@"\*", ".*");
+        return $@"\b{escapedWord}\b";
+    }
+}
