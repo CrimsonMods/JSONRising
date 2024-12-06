@@ -40,8 +40,14 @@ jobs:
 
       - name: Determine Version
         uses: gittools/actions/gitversion/execute@v0.9.7
-        with:
-            additionalArguments: '/updateprojectfiles /overrideconfig "mode=Mainline"'
+        id: gitversion
+
+      - name: Update Changelog Version
+        run: |
+          $content = Get-Content CHANGELOG.md -Raw
+          $content = $content -replace "latest", "${{ env.GitVersion_SemVer }}"
+          Set-Content CHANGELOG.md -Value $content
+        shell: pwsh
       
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
