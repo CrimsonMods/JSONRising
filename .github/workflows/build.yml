@@ -59,7 +59,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PACKAGE_VERSION: ${{ env.GitVersion_SemVer }}
         with:
-            releaseId: ${{ env.GitVersion_SemVer }}
+          releaseId: ${{env.GitVersion_SemVer}}
+          tagName: v${{ env.GitVersion_SemVer }}
+          releaseName: v${{ env.GitVersion_SemVer }}
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
 
       - name: GH Release
         uses: softprops/action-gh-release@v1

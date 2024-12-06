@@ -1,0 +1,4 @@
+mode: Mainline
+major-version-bump-message: "^(breaking|major):"
+minor-version-bump-message: "^(feature|minor):"
+patch-version-bump-message: "^(fix|patch):"
