@@ -49,6 +49,13 @@ jobs:
           $content = $content -replace "latest", "${{ env.GitVersion_SemVer }}"
           Set-Content CHANGELOG.md -Value $content
         shell: pwsh
+
+      - name: Update Tauri Config Version
+        run: |
+          $content = Get-Content src-tauri/tauri.conf.json -Raw
+          $content = $content -replace '"version": "0.0.0"', "`"version`": `"${{ env.GitVersion_SemVer }}`""
+          Set-Content src-tauri/tauri.conf.json -Value $content
+        shell: pwsh
       
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
