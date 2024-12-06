@@ -6,6 +6,9 @@ on:
     pull_request:
         branches: ["master"]
 
+permissions:
+    contents: write
+
 jobs:
   build-tauri:
     strategy:
@@ -82,3 +85,14 @@ jobs:
           fail_on_unmatched_files: true
           prerelease: true
           tag_name: v${{ env.GitVersion_SemVer }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "src-tauri"
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
