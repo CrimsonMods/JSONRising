@@ -3,10 +3,14 @@
 A simple GUI editor for JSON files for V Rising mods made with [ASP.NET Core](https://github.com/dotnet/aspnetcore) and [Tauri](https://github.com/tauri-apps/tauri).
 
 ## Installation
-- [Thunderstore](https://thunderstore.io/c/v-rising/p/skytech6/JSONRising/)
+### Stable Release
+- Go to [Thunderstore](https://thunderstore.io/c/v-rising/p/skytech6/JSONRising/)
 - Click _Manual Download_
 - Extract the downloaded .zip file
 - Run the `JSONRising_X.X.X_x64_setup.exe` file
+
+### Development Build
+- Download the latest release from [GitHub](https://github.com/CrimsonMods/JSONRising/releases)
 
 > [!NOTE]
 > You might get a prompt saying "Windows has protected your PC". In this case, click `More Info` and `Run Anyway`. _(It costs a LOT of money to get a certificate for applications.)_
@@ -22,6 +26,7 @@ A simple GUI editor for JSON files for V Rising mods made with [ASP.NET Core](ht
 Want to support my V Rising Mod development? 
 
 Donations Accepted
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/skytech6)
 
 Or buy/play my games! 
