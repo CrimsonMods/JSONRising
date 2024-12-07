@@ -1,0 +1,327 @@
+@page "/banned"
+@using JSONRising.Models
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="page-container">
+    <div class="nav-buttons">
+        <button @onclick="SaveConfig">Save JSON</button>
+        <button @onclick="LoadConfig">Load JSON</button>
+        <button @onclick="Back">Back</button>
+    </div>
+
+    <h3>CrimsonBanned: messages.json</h3>
+
+    <div class="content-container">
+        <div class="message-container">
+            @foreach (var message in Messages)
+            {
+                <div class="message-group">
+                    <label>@message.Key</label>
+                    <input type="text" value="@message.Value.Replace("\n", "\\n")"
+                        @onchange="@(e => UpdateMessage(message, e.Value?.ToString()))" class="message-input" />
+                    <div class="message-preview">
+                        <pre>[SYSTEM]@((MarkupString)ParseRichText(ParseResult(message.Value)))</pre>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="parameter-legend">
+            <h4>Parameter Legend</h4>
+            <table>
+                <tr>
+                    <td>{player}</td>
+                    <td>Player's character name (or Unknown)</td>
+                </tr>
+                <tr>
+                    <td>{id}</td>
+                    <td>Player's SteamID</td>
+                </tr>
+                <tr>
+                    <td>{issued}</td>
+                    <td>Date and time ban was issued</td>
+                </tr>
+                <tr>
+                    <td>{reason}</td>
+                    <td>Reason given for the ban</td>
+                </tr>
+                <tr>
+                    <td>{by}</td>
+                    <td>Admin's character name</td>
+                </tr>
+                <tr>
+                    <td>{type}</td>
+                    <td>Ban type (server/chat/voice)</td>
+                </tr>
+                <tr>
+                    <td>{until}</td>
+                    <td>Ban expiration date and time</td>
+                </tr>
+                <tr>
+                    <td>{remainder}</td>
+                    using System.Text.Encodings.Web;
+                    <td>Remaining ban duration</td>
+                </tr>
+                <tr>
+                    <td>{local}</td>
+                    <td>Ban issued from this server (CrimsonSQL only)</td>
+                </tr>
+            </table>
+
+            <h4>Rich Text Format</h4>
+            <table>
+                <tr>
+                    <td>&lt;b&gt;text&lt;/b&gt;</td>
+                    <td><b>Bold text</b></td>
+                </tr>
+                <tr>
+                    <td>&lt;i&gt;text&lt;/i&gt;</td>
+                    <td><i>Italic text</i></td>
+                </tr>
+                <tr>
+                    <td>&lt;u&gt;text&lt;/u&gt;</td>
+                    <td><u>Underlined text</u></td>
+                </tr>
+                <tr>
+                    <td>&lt;color=#hex&gt;text&lt;/color&gt;</td>
+                    <td>@((MarkupString)ParseRichText(coloredExample))</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        padding: 1rem;
+    }
+
+    .content-container {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .message-container {
+        flex: 0 0 75%;
+        max-width: 75%;
+    }
+
+    .parameter-legend {
+        flex: 0 0 25%;
+        background: #1e1e1e;
+        padding: 1rem;
+        border-radius: 4px;
+        height: fit-content;
+        position: sticky;
+        top: 1rem;
+    }
+
+    .parameter-legend h4 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #fff;
+    }
+
+    .parameter-legend table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .parameter-legend td {
+        padding: 0.5rem;
+        color: #fff;
+    }
+
+    .parameter-legend td:first-child {
+        color: #ffa500;
+        font-family: monospace;
+        white-space: nowrap;
+    }
+
+    .message-group {
+        margin-bottom: 2rem;
+    }
+
+    .message-input {
+        width: 100%;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+        font-family: monospace;
+    }
+
+    .message-preview {
+        background: #1e1e1e;
+        color: #ffa500;
+        /* Orange text */
+        padding: 1rem;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-family: monospace;
+    }
+</style>
+@code {
+
+    private string coloredExample = "<color=#FF0000>Colored text</color>";
+
+    private List<MessagePair> Messages = new()
+{
+new MessagePair("CheckHeader", "\n{player}'s ({id}) Bans:"),
+new MessagePair("CheckBanLine", "\n{type} Ban\nIssued: {issued}\nRemaining: {remainder}\nReason: {reason}"),
+new MessagePair("ListBan", "\n{player} ({id}) - {remainder}")
+};
+
+    private void UpdateMessage(MessagePair message, string? value)
+    {
+        if (value != null)
+        {
+            message.Value = value.Replace("\\n", "\n");
+        }
+    }
+
+    private async Task SaveConfig()
+    {
+        try
+        {
+            // 1. Show save dialog
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.save", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                // 2. Serialize config
+                var json = JsonSerializer.Serialize(Messages, new JsonSerializerOptions { WriteIndented = true }); ;
+
+                // 3. Save file using Tauri command
+                await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke",
+                "save_filter_config",
+                new FileRequest
+                    {
+                        Path = path,
+                        Content = json
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            // Handle error appropriately
+        }
+    }
+
+    private async Task LoadConfig()
+    {
+        try
+        {
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.open", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                var json = await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_filter_config", new FileRequest
+                    {
+                        Path = path
+                    });
+                Messages = JsonSerializer.Deserialize<List<MessagePair>>(json) ?? new();
+                foreach (var word in Messages)
+                {
+                    Console.WriteLine(word);
+                }
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine(ex);
+        }
+    }
+
+    private string ParseResult(string s)
+    {
+        DateTime now = DateTime.Now.ToLocalTime();
+        s = s.Replace("{player}", "Dracula");
+        s = s.Replace("{id}", "76561198032909853");
+        s = s.Replace("{issued}", now.ToString("MM/dd/yy HH:mm"));
+        s = s.Replace("{reason}", "Argued with admins and called them a slur.");
+        s = s.Replace("{by}", "Adminus");
+        s = s.Replace("{local}", "true");
+        s = s.Replace("{type}", "Chat");
+
+        DateTime then = now;
+        then = then.AddDays(1);
+        then = then.AddHours(3);
+        then = then.AddMinutes(30);
+
+        s = s.Replace("{until}", then.ToString("MM/dd/yy HH:mm"));
+        var span = then - now;
+        s = s.Replace("{remainder}", FormatRemainder(span));
+        return s;
+    }
+
+    private static string FormatRemainder(TimeSpan remainder)
+    {
+        string formattedRemainder = string.Empty;
+        if (remainder.Days > 0)
+            formattedRemainder += $"{remainder.Days} days, ";
+        if (remainder.Hours > 0)
+            formattedRemainder += $"{remainder.Hours} hours, ";
+        if (remainder.Minutes > 0)
+            formattedRemainder += $"{remainder.Minutes} minutes";
+
+        if (formattedRemainder.EndsWith(", "))
+            formattedRemainder = formattedRemainder.Substring(0, formattedRemainder.Length - 2);
+
+        return formattedRemainder;
+    }
+
+    private string ParseRichText(string input)
+    {
+        // Convert Unity-style rich text to HTML
+        input = input.Replace("<b>", "<strong>")
+        .Replace("</b>", "</strong>")
+        .Replace("<i>", "<em>")
+        .Replace("</i>", "</em>");
+
+        // Handle color tags
+        while (input.Contains("<color="))
+        {
+            int startIndex = input.IndexOf("<color=");
+            int endColorTag = input.IndexOf(">", startIndex);
+            int closeColorTag = input.IndexOf("</color>", endColorTag);
+
+            if (startIndex != -1 && endColorTag != -1 && closeColorTag != -1)
+            {
+                string colorValue = input.Substring(startIndex + 7, endColorTag - (startIndex + 7));
+                string textContent = input.Substring(endColorTag + 1, closeColorTag - (endColorTag + 1));
+
+                string replacement = $"<span style=\"color: {colorValue}\">{textContent}</span>";
+                input = input.Remove(startIndex, closeColorTag + 8 - startIndex).Insert(startIndex, replacement);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return input;
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private class FileRequest
+    {
+        public string? Path { get; set; }
+        public string? Content { get; set; }
+    }
+}

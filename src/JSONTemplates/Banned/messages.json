@@ -1,0 +1,14 @@
+[
+    {
+      "Key": "CheckHeader",
+      "Value": "\n{player}\u0027s ({id}) Bans:"
+    },
+    {
+      "Key": "CheckBanLine",
+      "Value": "\n{type} Ban\nIssued: {issued}\nRemaining: {remainder}\nReason: {reason}"
+    },
+    {
+      "Key": "ListBan",
+      "Value": "\n{player} ({id}) - {remainder}"
+    }
+  ]

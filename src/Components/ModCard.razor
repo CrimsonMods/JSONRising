@@ -22,7 +22,10 @@
 @code {
     private async Task OpenThunderstoreUrl()
     {
-        await JSRuntime.InvokeVoidAsync("open", Mod.ThunderstoreUrl, "_blank");
+        if (!string.IsNullOrEmpty(Mod.ThunderstoreUrl))
+        {
+            await JSRuntime.InvokeVoidAsync("window.__TAURI__.shell.open", Mod.ThunderstoreUrl);
+        }
     }
 
     private void NavigateToJson()
