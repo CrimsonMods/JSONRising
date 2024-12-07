@@ -1,0 +1,70 @@
+@namespace JSONRising.Components
+@using JSONRising.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public ModDefinition Mod { get; set; } = default!;
+}
+
+<div class="mod-card">
+    <img src="@Mod.IconUrl" alt="@Mod.Name icon" class="mod-icon" />
+    <div class="mod-info">
+        <h3>@Mod.Name</h3>
+        <div class="mod-buttons">
+            <button class="thunderstore-btn" @onclick="OpenThunderstoreUrl">Thunderstore</button>
+            <button class="json-btn" @onclick="NavigateToJson">JSON(s)</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task OpenThunderstoreUrl()
+    {
+        await JSRuntime.InvokeVoidAsync("open", Mod.ThunderstoreUrl, "_blank");
+    }
+
+    private void NavigateToJson()
+    {
+        NavigationManager.NavigateTo($"/{Mod.Id}");
+    }
+}
+
+<style>
+    .mod-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        width: 250px;
+        margin: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .mod-icon {
+        width: 128px;
+        height: 128px;
+        object-fit: cover;
+        margin-bottom: 1rem;
+    }
+
+    .mod-info {
+        text-align: center;
+        width: 100%;
+    }
+
+    .mod-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 0.5rem;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>

@@ -1,18 +1,37 @@
 ﻿@page "/"
+@using JSONRising.Components
 @using JSONRising.Models;
 @inject NavigationManager NavigationManager
 
-<h1>JSONRising</h1>
+<img src="images/banner.png" alt="JSONRising" class="banner-image" />
 
-<div class="mod-selection">
+<div class="mod-grid">
     @foreach (var mod in Mods)
     {
-        <div class="mod-card" @onclick="() => SelectMod(mod)">
-            <h3>@mod.Name</h3>
-            <p>@mod.Description</p>
-        </div>
+        <ModCard Mod="mod" />
     }
 </div>
+
+<footer class="kofi-footer">
+    <a href="https://ko-fi.com/skytech6" target="_blank">
+        <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" />
+    </a>
+</footer>
+
+<style>
+    .mod-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .kofi-footer {
+        text-align: center;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+</style>
 
 @code {
     private List<ModDefinition> Mods = new()
@@ -21,7 +40,9 @@
         { 
             Id = "chatfilter",
             Name = "CrimsonChatFilter", 
-            Description = "Configure filtered words for chat moderation"
+            Description = "Configure filtered words for chat moderation",
+            IconUrl = "/images/mods/ChatFilter.png",
+            ThunderstoreUrl = "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonChatFilter/"
         }
     };
 

@@ -6,17 +6,16 @@
             <input type="text" @bind="newWord" placeholder="Enter word to filter" class="mb-2" />
             <button @onclick="AddWord">Add Word</button>
         </div>
-
-        <div class="word-list gap-2">
-            @foreach (var word in FilteredWords)
-            {
-                <div class="word-item mb-2">
-                    <span>@word</span>
-                    <button @onclick="() => RemoveWord(word)">Remove</button>
-                </div>
-            }
-        </div>
-    </div>
+          <div class="word-list">
+              @foreach (var word in FilteredWords)
+              {
+                  <div class="word-item">
+                      <span>@word</span>
+                      <button class="remove-btn" @onclick="() => RemoveWord(word)">×</button>
+                  </div>
+              }
+          </div>
+      </div>
     <div class="right-column flex-grow-1">
         <div class="tester-input mb-4">
             <textarea @bind="testText" @bind:event="oninput" 

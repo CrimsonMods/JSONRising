@@ -1,0 +1,7 @@
+.banner-image {
+    height: auto;
+    width: 100%;
+    margin-bottom: 20px;
+    display: block;    /* Added to center the image */
+}
+
