@@ -1,1 +1,1 @@
-# JSONRising
+![JSONRising](https://raw.githubusercontent.com/CrimsonMods/JSONRising/master/.github/images/banner.png)
