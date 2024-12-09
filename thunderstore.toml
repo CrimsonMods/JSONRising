@@ -1,0 +1,27 @@
+[config]
+schemaVersion = "0.0.1"
+
+[package]
+namespace = "skytech6"
+name = "JSONRising"
+versionNumber = "0.1.0"
+description = "GUI JSON Editor for V Rising Mods"
+websiteUrl = "https://github.com/CrimsonMods/JSONRising/"
+containsNsfwContent = false
+
+[package.dependencies]
+
+[build]
+icon = "./.github/images/icon_256.png"
+readme = "./README.md"
+outdir = "./build"
+
+[[build.copy]]
+source = "./dist"
+target = ""
+
+[publish]
+communities = ["v-rising"]
+repository = "https://thunderstore.io"
+[publish.categories]
+v-rising = ["1-0-update", "mods", "server"]
