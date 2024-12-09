@@ -28,7 +28,7 @@ _[BloodyEncounters/Generic screenshot](https://thunderstore.io/c/v-rising/p/Trod
 
 - [CrimsonBanned](https://thunderstore.io/c/v-rising/p/skytech6/CrimsonBanned/)
 _CrimsonBanned screenshot_
-![CrimsonBannedScreenshot](https://raw.githubusercontent.com/CrimsonMods/JSONRising/master/.github/images/screenshots/banned.png)
+![CrimsonBannedScreenshot](https://raw.githubusercontent.com/CrimsonMods/JSONRising/master/.github/images/screenshots/banned_2.png)
 
 ## Support
 
