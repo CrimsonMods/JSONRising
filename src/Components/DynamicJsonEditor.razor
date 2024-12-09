@@ -1,0 +1,117 @@
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+
+<div class="dynamic-editor">
+    <div class="json-tree">
+        @RenderJsonContent(JsonContent)
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Dictionary<string, object> JsonContent { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback<Dictionary<string, object>> OnValueChanged { get; set; }
+
+    private RenderFragment RenderJsonContent(Dictionary<string, object> content) => builder =>
+    {
+        foreach (var item in content)
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "json-item");
+
+            builder.OpenElement(2, "label");
+            builder.AddContent(3, $"{item.Key}:");
+            builder.CloseElement();
+
+            if (item.Value is Dictionary<string, object> nestedDict)
+            {
+                builder.OpenElement(4, "div");
+                builder.AddAttribute(5, "class", "nested-object");
+                builder.AddContent(6, RenderJsonContent(nestedDict));
+                builder.CloseElement();
+            }
+            else if (item.Value is List<object> list)
+            {
+                builder.OpenElement(7, "div");
+                builder.AddAttribute(8, "class", "array-items");
+                foreach (var listItem in list)
+                {
+                    if (listItem is Dictionary<string, object> dictItem)
+                    {
+                        builder.AddContent(9, RenderJsonContent(dictItem));
+                    }
+                    else
+                    {
+                        builder.OpenElement(10, "input");
+                        builder.AddAttribute(11, "type", "text");
+                        builder.AddAttribute(12, "value", listItem?.ToString());
+                        builder.CloseElement();
+                    }
+                }
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(13, "input");
+                builder.AddAttribute(14, "type", GetInputType(item.Value));
+                builder.AddAttribute(15, "value", item.Value?.ToString());
+                builder.AddAttribute(16, "onchange", EventCallback.Factory.CreateBinder<string>(
+        this,
+        async value =>
+    {
+        JsonContent[item.Key] = value;
+        await OnValueChanged.InvokeAsync(JsonContent);
+    },
+        item.Value?.ToString() ?? ""
+        ));
+                builder.CloseElement();
+            }
+            builder.CloseElement();
+        }
+    };
+
+    private string GetInputType(object value)
+    {
+        return value switch
+        {
+            int or double or float or decimal => "number",
+            bool => "checkbox",
+            _ => "text"
+        };
+    }
+}
+
+<style>
+    .json-item {
+        margin: 8px 0;
+        padding: 4px;
+    }
+
+    .nested-object {
+        margin-left: 20px;
+        padding: 8px;
+        border-left: 2px solid #ccc;
+    }
+
+    .array-items {
+        margin-left: 20px;
+        padding: 8px;
+        border-left: 2px solid #88c;
+    }
+
+    label {
+        display: inline-block;
+        min-width: 120px;
+        font-weight: bold;
+    }
+
+    input {
+        margin-left: 8px;
+        padding: 4px;
+    }
+</style>

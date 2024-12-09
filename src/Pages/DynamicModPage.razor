@@ -1,0 +1,253 @@
+@page "/unsupported"
+@using System.Text.Json
+@using JSONRising.Components
+@using JSONRising.Models
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<div class="nav-buttons">
+    <button @onclick="SaveConfig">Save JSON</button>
+    <button @onclick="LoadConfig">Load JSON</button>
+    <button @onclick="Back">Back</button>
+</div>
+
+<h2>Generic Configuration</h2>
+
+@if (JsonArray != null)
+{
+    <div class="split-view">
+        <div class="item-list">
+            @for (int i = 0; i < JsonArray.Count; i++)
+            {
+                var index = i;
+                var item = JsonArray[i];
+                <div class="list-item @(selectedIndex == index ? "selected" : "")" @onclick="() => SelectItem(index)">
+                    @(item.ContainsKey("name") ? item["name"]?.ToString() : $"Item {index + 1}")
+                </div>
+            }
+            <div class="create-new-button" @onclick="CreateNewItem">
+                + Create New
+            </div>
+        </div>
+        <div class="item-detail">
+            @if (JsonContent != null)
+            {
+                <DynamicJsonEditor JsonContent="@JsonContent" OnValueChanged="HandleJsonContentChanged" />
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private void SelectItem(int index)
+    {
+        selectedIndex = index;
+        JsonContent = JsonArray[index];
+        StateHasChanged();
+    }
+
+    private void CreateNewItem()
+    {
+        var newItem = new Dictionary<string, object>();
+        // Copy structure from first item if exists
+        if (JsonArray.Any())
+        {
+            foreach (var key in JsonArray[0].Keys)
+            {
+                newItem[key] = "";
+            }
+        }
+        JsonArray.Add(newItem);
+        SelectItem(JsonArray.Count - 1);
+    }
+
+    private async Task HandleJsonContentChanged(Dictionary<string, object> updatedContent)
+    {
+        if (JsonArray != null && selectedIndex >= 0 && selectedIndex < JsonArray.Count)
+        {
+            JsonArray[selectedIndex] = updatedContent;
+            JsonContent = updatedContent;
+            StateHasChanged();
+        }
+    }
+}
+@code {
+    private List<Dictionary<string, object>>? JsonArray; // Add this
+    private Dictionary<string, object>? JsonContent;
+    private int selectedIndex = 0; // Add this
+
+    private async Task SaveConfig()
+    {
+        try
+        {
+            // 1. Show save dialog
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.save", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                // 2. Serialize config
+                var json = JsonSerializer.Serialize(JsonContent, new JsonSerializerOptions { WriteIndented = true }); ;
+
+                // 3. Save file using Tauri command
+                await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke",
+                "save_filter_config",
+                new FileRequest
+                    {
+                        Path = path,
+                        Content = json
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            // Handle error appropriately
+        }
+    }
+    private async Task LoadConfig()
+    {
+        try
+        {
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.open", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                var json = await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_filter_config", new FileRequest
+                    {
+                        Path = path
+                    });
+
+                using (JsonDocument document = JsonDocument.Parse(json))
+                {
+                    // Handle both array and object roots
+                    if (document.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        JsonArray = new List<Dictionary<string, object>>();
+                        foreach (var element in document.RootElement.EnumerateArray())
+                        {
+                            var dict = new Dictionary<string, object>();
+                            foreach (JsonProperty property in element.EnumerateObject())
+                            {
+                                dict[property.Name] = ConvertJsonElement(property.Value);
+                            }
+                            JsonArray.Add(dict);
+                        }
+                        JsonContent = JsonArray.FirstOrDefault();
+                    }
+                    else if (document.RootElement.ValueKind == JsonValueKind.Object)
+                    {
+                        // Original object handling
+                        JsonContent = new Dictionary<string, object>();
+                        foreach (JsonProperty property in document.RootElement.EnumerateObject())
+                        {
+                            JsonContent[property.Name] = ConvertJsonElement(property.Value);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("JSON root must be an object or array");
+                    }
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading config: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", $"Error loading JSON: {ex.Message}");
+        }
+    }
+
+    private object ConvertJsonElement(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.String:
+                return element.GetString() ?? string.Empty;
+            case JsonValueKind.Number:
+                return element.GetDouble();
+            case JsonValueKind.True:
+            case JsonValueKind.False:
+                return element.GetBoolean();
+            case JsonValueKind.Array:
+                return element.EnumerateArray()
+                .Select(e => ConvertJsonElement(e))
+                .ToList();
+            case JsonValueKind.Object:
+                var dict = new Dictionary<string, object>();
+                foreach (JsonProperty prop in element.EnumerateObject())
+                {
+                    dict[prop.Name] = ConvertJsonElement(prop.Value);
+                }
+                return dict;
+            case JsonValueKind.Null:
+                return null!;
+            default:
+                return element.ToString();
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private class FileRequest
+    {
+        public string? Path { get; set; }
+        public string? Content { get; set; }
+    }
+}
+
+<style>
+    .split-view {
+        display: flex;
+        height: calc(100vh - 100px);
+        margin-top: 20px;
+    }
+
+    .item-list {
+        width: 250px;
+        overflow-y: auto;
+        border-right: 1px solid #444;
+    }
+
+    .list-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #444;
+    }
+
+    .list-item:hover {
+        background-color: #3a3a3a;
+    }
+
+    .list-item.selected {
+        background-color: #444;
+    }
+
+    .item-detail {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+    }
+
+    .create-new-button {
+        padding: 15px;
+        text-align: center;
+        background-color: #444;
+        cursor: pointer;
+        border-top: 1px solid #555;
+    }
+
+    .create-new-button:hover {
+        background-color: #555;
+    }
+</style>

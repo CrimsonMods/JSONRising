@@ -40,7 +40,6 @@
         { 
             Id = "chatfilter",
             Name = "CrimsonChatFilter", 
-            Description = "Configure filtered words for chat moderation",
             IconUrl = "/images/mods/ChatFilter.png",
             ThunderstoreUrl = "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonChatFilter/"
         },
@@ -48,14 +47,21 @@
         {
             Id = "banned",
             Name = "CrimsonBanned",
-            Description = "",
             IconUrl = "/images/mods/Banned.png",
             ThunderstoreUrl = "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonBanned/"
+        },
+        new ModDefinition
+        {
+            Id = "unsupported",
+            Name = "Unsupported Mod",
+            IconUrl = "/images/mods/Banned.png",
+            IsDynamicMod = true
         }
     };
 
     private void SelectMod(ModDefinition mod)
     {
-        NavigationManager.NavigateTo($"/{mod.Id}");
+        var route = mod.IsDynamicMod ? $"/dynamic" : $"/{mod.Id}";
+        NavigationManager.NavigateTo(route);
     }
 }
