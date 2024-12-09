@@ -1,4 +1,7 @@
 `latest`
+- Added support for "Generic" JSONs
+
+`0.1.15`
 - Added a new Mod: CrimsonBanned
 - Support for CrimsonBanned's messages.json
 - Icons for JSON Rising

@@ -38,9 +38,20 @@
             else if (item.Value is List<object> list)
             {
                 builder.OpenElement(7, "div");
-                builder.AddAttribute(8, "class", "array-items");
-                foreach (var listItem in list)
+                builder.AddAttribute(8, "class", "array-container");
+
+                // Add array controls
+                builder.OpenElement(20, "button");
+                builder.AddAttribute(21, "class", "array-button");
+                builder.AddAttribute(22, "onclick", EventCallback.Factory.Create(this, () => AddArrayItem(item.Key)));
+                builder.AddContent(23, "Add Item");
+                builder.CloseElement();
+
+                foreach (var (listItem, index) in list.Select((value, i) => (value, i)))
                 {
+                    builder.OpenElement(24, "div");
+                    builder.AddAttribute(25, "class", "array-item");
+
                     if (listItem is Dictionary<string, object> dictItem)
                     {
                         builder.AddContent(9, RenderJsonContent(dictItem));
@@ -52,6 +63,15 @@
                         builder.AddAttribute(12, "value", listItem?.ToString());
                         builder.CloseElement();
                     }
+
+                    // Remove button for each item
+                    builder.OpenElement(26, "button");
+                    builder.AddAttribute(27, "class", "remove-button");
+                    builder.AddAttribute(28, "onclick", EventCallback.Factory.Create(this, () => RemoveArrayItem(item.Key, index)));
+                    builder.AddContent(29, "X");
+                    builder.CloseElement();
+
+                    builder.CloseElement();
                 }
                 builder.CloseElement();
             }
@@ -63,10 +83,10 @@
                 builder.AddAttribute(16, "onchange", EventCallback.Factory.CreateBinder<string>(
         this,
         async value =>
-    {
-        JsonContent[item.Key] = value;
-        await OnValueChanged.InvokeAsync(JsonContent);
-    },
+        {
+            JsonContent[item.Key] = value;
+            await OnValueChanged.InvokeAsync(JsonContent);
+        },
         item.Value?.ToString() ?? ""
         ));
                 builder.CloseElement();
@@ -84,6 +104,33 @@
             _ => "text"
         };
     }
+
+    private async Task AddArrayItem(string key)
+    {
+        if (JsonContent[key] is List<object> list)
+        {
+            // Clone structure of first item if exists
+            if (list.Count > 0 && list[0] is Dictionary<string, object> template)
+            {
+                var newItem = new Dictionary<string, object>();
+                foreach (var kvp in template)
+                {
+                    newItem[kvp.Key] = "";
+                }
+                list.Add(newItem);
+            }
+            await OnValueChanged.InvokeAsync(JsonContent);
+        }
+    }
+
+    private async Task RemoveArrayItem(string key, int index)
+    {
+        if (JsonContent[key] is List<object> list && index < list.Count)
+        {
+            list.RemoveAt(index);
+            await OnValueChanged.InvokeAsync(JsonContent);
+        }
+    }
 }
 
 <style>
@@ -96,6 +143,29 @@
         margin-left: 20px;
         padding: 8px;
         border-left: 2px solid #ccc;
+    }
+
+    .array-container {
+        margin-left: 20px;
+        padding: 8px;
+        border-left: 2px solid #88c;
+    }
+
+    .array-item {
+        display: flex;
+        align-items: center;
+        margin: 4px 0;
+    }
+
+    .array-button {
+        margin: 8px 0;
+        padding: 4px 8px;
+    }
+
+    .remove-button {
+        margin-left: 8px;
+        padding: 2px 6px;
+        color: red;
     }
 
     .array-items {

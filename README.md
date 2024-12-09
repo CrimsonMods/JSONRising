@@ -19,7 +19,16 @@ A simple GUI editor for JSON files for V Rising mods made with [ASP.NET Core](ht
 > If you're unsure about the safety of this app, I would suggest running it through a service like [VirusTotal](https://www.virustotal.com).
 
 ## Supported Mods
+- Generic JSONs
+Rising will attempt to procedurally generate a GUI for any unknown JSON files given to it. This is useful for mods that don't have official support for JSON Rising.
+_[BloodyEncounters/Generic screenshot](https://thunderstore.io/c/v-rising/p/Trodi/BloodyEncounters/)_
+![GenericScreenshhot](https://raw.githubusercontent.com/CrimsonMods/JSONRising/master/.github/images/screenshots/generic.png)
+
 - [CrimsonChatFilter](https://thunderstore.io/c/v-rising/p/skytech6/CrimsonChatFilter/)
+
+- [CrimsonBanned](https://thunderstore.io/c/v-rising/p/skytech6/CrimsonBanned/)
+_CrimsonBanned screenshot_
+![CrimsonBannedScreenshot](https://raw.githubusercontent.com/CrimsonMods/JSONRising/master/.github/images/screenshots/banned.png)
 
 ## Support
 
