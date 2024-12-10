@@ -5,17 +5,17 @@
 
 @code {
     [Parameter]
-    public ModDefinition Mod { get; set; } = default!;
+    public JsonSchema Schema { get; set; }
 }
 
 <div class="mod-card">
-    <img src="@Mod.IconUrl" alt="@Mod.Name icon" class="mod-icon" />
+    <img src="@Schema.IconUrl" alt="@Schema.Name icon" class="mod-icon" />
     <div class="mod-info">
-        <h3>@Mod.Name</h3>
+        <h3>@Schema.Name</h3>
         <div class="mod-buttons">
-            @if (!string.IsNullOrEmpty(Mod.ThunderstoreUrl))
+            @if (!string.IsNullOrEmpty(Schema.DownloadUrl))
             {
-                <button class="thunderstore-btn" @onclick="OpenThunderstoreUrl">Thunderstore</button>
+                <button class="thunderstore-btn" @onclick="OpenThunderstoreUrl">Download</button>
             }
             <button class="json-btn" @onclick="NavigateToJson">JSON(s)</button>
         </div>
@@ -25,15 +25,15 @@
 @code {
     private async Task OpenThunderstoreUrl()
     {
-        if (!string.IsNullOrEmpty(Mod.ThunderstoreUrl))
+        if (!string.IsNullOrEmpty(Schema.DownloadUrl))
         {
-            await JSRuntime.InvokeVoidAsync("window.__TAURI__.shell.open", Mod.ThunderstoreUrl);
+            await JSRuntime.InvokeVoidAsync("window.__TAURI__.shell.open", Schema.DownloadUrl);
         }
     }
 
     private void NavigateToJson()
     {
-        NavigationManager.NavigateTo($"/{Mod.Id}");
+        NavigationManager.NavigateTo($"/editor/{Schema.Id}");
     }
 }
 

@@ -1,0 +1,18 @@
+{
+    "id": "crimson-chat-filter",
+    "name": "CrimsonChatFilter",
+    "subName": "filtered_words.json",
+    "category": "V Rising",
+    "iconUrl": "https://raw.githubusercontent.com/CrimsonMods/CrimsonChatFilter/master/images/logo_256.png",
+    "downloadUrl": "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonChatFilter/",
+    "fields": [
+        {
+            "name": "Filtered Words",
+            "path": "$.filters",
+            "componentType": "FilterList",
+            "componentProps": {
+                "label": "Filter List"
+            }
+        }
+    ]
+}

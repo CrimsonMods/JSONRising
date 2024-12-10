@@ -1,4 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using JSONRising.Services
+@inject UpdateService UpdateService
+@inject IJSRuntime JSRuntime
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" />
     </Found>
@@ -7,3 +11,25 @@
         <p role="alert">Sorry, there's nothing at this address.</p>
     </NotFound>
 </Router>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var updateAvailable = await UpdateService.CheckForUpdates();
+        
+        if (updateAvailable)
+        {
+            var userWantsToUpdate = await JSRuntime.InvokeAsync<bool>("confirm", 
+                "A new version of JSONRising is available. Would you like to download it?");
+            
+            if (userWantsToUpdate)
+            {
+                // Replace with your actual download URL
+                await JSRuntime.InvokeVoidAsync("window.__TAURI__.shell.open", 
+                    "https://thunderstore.io/c/v-rising/p/skytech6/JSONRising/", "_blank");
+            }
+        }
+        
+        await base.OnInitializedAsync();
+    }
+}

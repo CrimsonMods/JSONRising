@@ -1,0 +1,22 @@
+@code {
+    [Parameter] public List<string> Value { get; set; }
+    [Parameter] public EventCallback<List<string>> ValueChanged { get; set; }
+    
+    private string newWord = "";
+
+    private async Task AddWord()
+    {
+        if (!string.IsNullOrWhiteSpace(newWord) && !Value.Contains(newWord))
+        {
+            Value.Add(newWord);
+            await ValueChanged.InvokeAsync(Value);
+            newWord = "";
+        }
+    }
+
+    private async Task RemoveWord(string word)
+    {
+        Value.Remove(word);
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

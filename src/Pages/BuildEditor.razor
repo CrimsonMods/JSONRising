@@ -1,0 +1,20 @@
+@page "/editor/{modId}"
+@using JSONRising.Components
+@using JSONRising.Models
+@using JSONRising.Services
+@inject ISchemaService SchemaService
+
+<DynamicJsonEditor Schema="@currentSchema" JsonContent="@jsonContent" />
+
+@code {
+    [Parameter] public string ModId { get; set; }
+    private JsonSchema currentSchema;
+    private string jsonContent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentSchema = await SchemaService.GetSchemaById(ModId);
+        // Load JSON content
+    }
+}
+    using JSONRising.Models;

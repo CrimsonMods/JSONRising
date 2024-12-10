@@ -1,4 +1,7 @@
 `latest`
+- Prompt to download the latest version of the mod on startup
+
+`0.1.18`
 - Added support for "Generic" JSONs
 
 `0.1.15`

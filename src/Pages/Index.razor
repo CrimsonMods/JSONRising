@@ -1,21 +1,22 @@
 ﻿@page "/"
 @using JSONRising.Components
 @using JSONRising.Models;
+@using JSONRising.Services
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject ISchemaService SchemaService;
 
 <img src="images/banner.png" alt="JSONRising" class="banner-image" />
 
 <div class="mod-grid">
-    @foreach (var mod in Mods)
+    @foreach (var json in JSONs)
     {
-        <ModCard Mod="mod" />
+        <ModCard Schema="json" />
     }
 </div>
 
 <footer class="kofi-footer">
-    <a href="https://ko-fi.com/skytech6" target="_blank">
-        <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" />
-    </a>
+    <button @onclick="OpenKoFi"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="ko-fi" /></button>
 </footer>
 
 <style>
@@ -34,34 +35,29 @@
 </style>
 
 @code {
-    private List<ModDefinition> Mods = new()
+    private List<JsonSchema> JSONs = new();
+    protected override async Task OnInitializedAsync()
     {
-        new ModDefinition 
-        { 
-            Id = "chatfilter",
-            Name = "CrimsonChatFilter", 
-            IconUrl = "/images/mods/ChatFilter.png",
-            ThunderstoreUrl = "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonChatFilter/"
-        },
-        new ModDefinition
+        try
         {
-            Id = "banned",
-            Name = "CrimsonBanned",
-            IconUrl = "/images/mods/Banned.png",
-            ThunderstoreUrl = "https://thunderstore.io/c/v-rising/p/skytech6/CrimsonBanned/"
-        },
-        new ModDefinition
-        {
-            Id = "unsupported",
-            Name = "Unsupported Mod",
-            IconUrl = "/images/icon_256.png",
-            IsDynamicMod = true
+            JSONs = await SchemaService.GetAllSchemas();
+            Console.WriteLine($"Number of schemas loaded: {JSONs.Count}");
+            foreach (var json in JSONs)
+            {
+                Console.WriteLine($"Schema: {json.Name}, Id: {json.Id}, Icon: {json.IconUrl}");
+            }
         }
-    };
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading schemas: {ex.Message}");
+            JSONs = new List<JsonSchema>();
+        }
+        await base.OnInitializedAsync();
+    }
 
-    private void SelectMod(ModDefinition mod)
+    private async Task OpenKoFi()
     {
-        var route = mod.IsDynamicMod ? $"/dynamic" : $"/{mod.Id}";
-        NavigationManager.NavigateTo(route);
+        await JSRuntime.InvokeVoidAsync("window.__TAURI__.shell.open",
+        "https://ko-fi.com/skytech6", "_blank");
     }
 }
