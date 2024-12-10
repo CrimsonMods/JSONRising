@@ -11,7 +11,7 @@
 <div class="mod-grid">
     @foreach (var json in JSONs)
     {
-        <ModCard Schema="json" />
+        <JSONCard Schema="json" />
     }
 </div>
 
@@ -41,11 +41,6 @@
         try
         {
             JSONs = await SchemaService.GetAllSchemas();
-            Console.WriteLine($"Number of schemas loaded: {JSONs.Count}");
-            foreach (var json in JSONs)
-            {
-                Console.WriteLine($"Schema: {json.Name}, Id: {json.Id}, Icon: {json.IconUrl}");
-            }
         }
         catch (Exception ex)
         {

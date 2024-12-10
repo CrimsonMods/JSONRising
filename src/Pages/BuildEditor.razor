@@ -2,19 +2,128 @@
 @using JSONRising.Components
 @using JSONRising.Models
 @using JSONRising.Services
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
 @inject ISchemaService SchemaService
+@inject NavigationManager NavigationManager
 
-<DynamicJsonEditor Schema="@currentSchema" JsonContent="@jsonContent" />
+<div class="nav-buttons">
+    <button @onclick="SaveConfig">Save JSON</button>
+    <button @onclick="LoadConfig">Load JSON</button>
+    <button @onclick="Back">Back</button>
+</div>
+
+@if (currentSchema != null)
+{
+    <h2>@currentSchema.Name Editor</h2>
+    <DynamicJsonEditor Schema="@currentSchema" @bind-JsonContent="@jsonContent" />
+}
 
 @code {
-    [Parameter] public string ModId { get; set; }
-    private JsonSchema currentSchema;
-    private string jsonContent;
+    [Parameter] public string ModId { get; set; } = null!;
+    private JsonSchema? currentSchema;
+    private string jsonContent = "{}"; // Default empty JSON object
 
     protected override async Task OnInitializedAsync()
     {
         currentSchema = await SchemaService.GetSchemaById(ModId);
-        // Load JSON content
+        if (currentSchema == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Create dynamic JSON structure from schema paths
+        var defaultJson = new Dictionary<string, object>();
+        foreach (var field in currentSchema.Fields)
+        {
+            var path = field.Path.TrimStart('$', '.');
+            if (!defaultJson.ContainsKey(path))
+            {
+                // Initialize based on component type
+                defaultJson[path] = field.ComponentType switch
+                {
+                    "FilterList" => new List<string>(),
+                    // Add more component types here as needed
+                    _ => new List<string>() // Default to empty list
+                };
+            }
+        }
+
+        jsonContent = JsonSerializer.Serialize(defaultJson, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+    }
+
+    private async Task SaveConfig()
+    {
+        try
+        {
+            // 1. Show save dialog
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.save", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                // 2. Serialize config
+                var json = JsonSerializer.Serialize(jsonContent, new JsonSerializerOptions { WriteIndented = true }); ;
+
+                // 3. Save file using Tauri command
+                await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke",
+                "save_filter_config",
+                new FileRequest
+                    {
+                        Path = path,
+                        Content = json
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            // Handle error appropriately
+        }
+    }
+
+    private async Task LoadConfig()
+    {
+        try
+        {
+            var path = await JSRuntime.InvokeAsync<string>("window.__TAURI__.dialog.open", new
+            {
+                filters = new[] { new { name = "JSON", extensions = new[] { "json" } } }
+            });
+
+            if (!string.IsNullOrEmpty(path))
+            {
+                var json = await JSRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_filter_config", new FileRequest
+                    {
+                        Path = path
+                    });
+                
+                // Directly assign the loaded JSON string
+                jsonContent = json;
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private class FileRequest
+    {
+        public string? Path { get; set; }
+        public string? Content { get; set; }
     }
 }
-    using JSONRising.Models;

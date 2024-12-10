@@ -20,37 +20,34 @@ public class SchemaService : ISchemaService
         _jsRuntime = jsRuntime;
         _logger = logger;
     }
-      public async Task<List<JsonSchema>> GetAllSchemas()
-      {
-          try
-          {
-              var schemaFiles = await _jsRuntime.InvokeAsync<string[]>("window.__TAURI__.core.invoke", "list_schema_files");
-              _logger.LogInformation($"Found schema files: {string.Join(", ", schemaFiles)}");
+    public async Task<List<JsonSchema>> GetAllSchemas()
+    {
+        try
+        {
+            var schemaFiles = await _jsRuntime.InvokeAsync<string[]>("window.__TAURI__.core.invoke", "list_schema_files");
 
-              var schemas = new List<JsonSchema>();
-              var options = new System.Text.Json.JsonSerializerOptions
-              {
-                  PropertyNameCaseInsensitive = true,
-                  PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-              };
+            var schemas = new List<JsonSchema>();
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
 
-              foreach (var file in schemaFiles)
-              {
-                  var jsonString = await _jsRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_schema_file", new { path = $"{file}" });
-                  _logger.LogInformation($"Raw JSON string: {jsonString}");
-                
-                  var schema = System.Text.Json.JsonSerializer.Deserialize<JsonSchema>(jsonString, options);
-                  _logger.LogInformation($"Deserialized schema - Name: {schema.Name}, Id: {schema.Id}");
-                  schemas.Add(schema);
-              }
+            foreach (var file in schemaFiles)
+            {
+                var jsonString = await _jsRuntime.InvokeAsync<string>("window.__TAURI__.core.invoke", "load_schema_file", new { path = $"{file}" });
 
-              return schemas;
-          }
-          catch (Exception ex)
-          {
-              _logger.LogError($"Error in GetAllSchemas: {ex.Message}");
-              return new List<JsonSchema>();
-          }
+                var schema = System.Text.Json.JsonSerializer.Deserialize<JsonSchema>(jsonString, options);
+                schemas.Add(schema);
+            }
+
+            return schemas;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error in GetAllSchemas: {ex.Message}");
+            return new List<JsonSchema>();
+        }
     }
 
     public async Task<JsonSchema?> GetSchemaById(string id)

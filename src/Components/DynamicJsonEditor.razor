@@ -9,16 +9,21 @@
     {
         var fieldValue = GetFieldValue(field.Path);
         <DynamicComponent Type="@GetComponentType(field.ComponentType)"
-                         Parameters="@GetComponentParameters(field)"
-                         @bind-Value="fieldValue" />
+            Parameters="@GetComponentParameters(field, fieldValue)" />
     }
 </div>
 
 @code {
-    [Parameter] public JsonSchema Schema { get; set; }
-    [Parameter] public string JsonContent { get; set; }
+    [Parameter] 
+    public JsonSchema Schema { get; set; }
     
-    private Type GetComponentType(string componentType) 
+    [Parameter] 
+    public string JsonContent { get; set; }
+
+    [Parameter]
+    public EventCallback<string> JsonContentChanged { get; set; }
+
+    private Type GetComponentType(string componentType)
     {
         return componentType switch
         {
@@ -26,49 +31,67 @@
             _ => throw new ArgumentException($"Unknown component type: {componentType}")
         };
     }
-
-    private Dictionary<string, object> GetComponentParameters(SchemaField field)
+    private Dictionary<string, object> GetComponentParameters(SchemaField field, object currentValue)
     {
         var parameters = new Dictionary<string, object>();
-        
-        // Add any default parameters
-        parameters["Label"] = field.Name;
-        
-        // Add custom component properties from schema
-        if (field.ComponentProps != null)
+
+        var typedValue = currentValue as List<string> ?? new List<string>();
+        parameters["Value"] = typedValue;
+
+        parameters["ValueChanged"] = EventCallback.Factory.Create<List<string>>(this, async (value) =>
         {
-            foreach (var prop in field.ComponentProps)
-            {
-                parameters[prop.Key] = prop.Value;
-            }
-        }
+            await UpdateFieldValue(field.Path, value);
+        });
 
         return parameters;
     }
 
     private object GetFieldValue(string jsonPath)
     {
-        // Parse the JSON content
-        using JsonDocument doc = JsonDocument.Parse(JsonContent);
-        
-        // Navigate to the specified path and get value
-        JsonElement element = doc.RootElement;
-        string[] pathParts = jsonPath.Split('.');
-        
-        foreach (var part in pathParts)
+        try 
         {
-            if (part.StartsWith("$")) continue; // Skip root indicator
-            if (!element.TryGetProperty(part, out element))
-            {
-                return null;
-            }
-        }
+            using JsonDocument doc = JsonDocument.Parse(JsonContent);
+            JsonElement root = doc.RootElement;
+            
+            // Remove the $ and split the path
+            string[] pathParts = jsonPath.TrimStart('$', '.').Split('.');
+            JsonElement current = root;
 
-        return element.GetString();
+            // Navigate to the correct element
+            foreach (var part in pathParts)
+            {
+                if (!current.TryGetProperty(part, out current))
+                {
+                    return new List<string>();
+                }
+            }
+
+            // Convert array to List<string>
+            if (current.ValueKind == JsonValueKind.Array)
+            {
+                return current.EnumerateArray()
+                    .Select(e => e.GetString())
+                    .Where(s => s != null)
+                    .ToList();
+            }
+
+            return new List<string>();
+        }
+        catch
+        {
+            return new List<string>();
+        }
+    }
+
+    private async Task UpdateFieldValue(string path, object value)
+    {
+        using var doc = JsonDocument.Parse(JsonContent);
+        var root = doc.RootElement.Clone();
+
+        // Create new JSON with updated value
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        JsonContent = JsonSerializer.Serialize(root, options);
+
+        StateHasChanged();
     }
 }
-    using JSONRising.Components.Inputs;
-
-#line default
-#line hidden
-#nullable disable

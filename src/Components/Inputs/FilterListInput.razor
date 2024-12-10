@@ -1,3 +1,56 @@
+@using JSONRising.Components.Inputs
+
+<div class="filter-list">
+    <div class="input-row">
+        <input type="text" @bind="newWord" @onkeyup="@(e => { if (e.Key == "Enter") AddWord(); })" placeholder="Add new word..." />
+        <button @onclick="AddWord">Add</button>
+    </div>
+
+    <div class="filter-items">
+        @foreach (var word in Value ?? new List<string>())
+        {
+            <div class="filter-item">
+                <span>@word</span>
+                <button @onclick="() => RemoveWord(word)">×</button>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .filter-list {
+        margin: 10px 0;
+    }
+
+    .input-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .filter-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .filter-item {
+        background: #444;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-item button {
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+    }
+</style>
+
 @code {
     [Parameter] public List<string> Value { get; set; }
     [Parameter] public EventCallback<List<string>> ValueChanged { get; set; }
